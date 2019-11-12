@@ -1,0 +1,111 @@
+# Hello from Gambits Universal (Javascript) Backend
+
+   ben@srctxt.com
+   2019.11.12
+
+```
+
+## Introduction
+
+Gambit is a Scheme implementation by Marc Feeley. It primarely compiles to c, but can also compile to other targets by its Universal Backend.
+
+In July 2019 Marc posted an example on the mailing list under the following link: https://mailman.iro.umontreal.ca/pipermail/gambit-list/2019-July/009103.html
+
+This link is cited often, so this here is basically just a backup of this article. 
+
+A few months later I had some trouble running its initial example, which turned out later, was due some minor changes in some on declaration sections. His comments can be found here: 
+https://mailman.iro.umontreal.ca/pipermail/gambit-list/2019-November/009240.html
+
+
+
+## Code
+
+### lib.scm
+
+;; file: lib.scm
+
+;(declare (standard-bindings) (extended-bindings) (not safe) (not run-time-bindings))
+
+(declare (standard-bindings) (extended-bindings) (not safe) (not run-time-bindings))
+(declare (not standard-bindings append for-each))
+
+(println ">>> lib.scm")
+
+(define (for-each f lst)
+  (if (pair? lst)
+      (begin
+        (f (car lst))
+        (for-each f (cdr lst)))))
+
+(define (append lst1 lst2)
+  (if (pair? lst1)
+      (cons (car lst1) (append (cdr lst1) lst2))
+      lst2))
+
+(define (current-milliseconds)
+  (##inline-host-expression "Date.now()"))
+
+(define (js-alert obj)
+  (##inline-host-statement "console.log(g_scm2host(@1@));" obj))
+
+(app#) ;; execute app.scm module
+```
+
+### app.scm
+
+```
+;; file: app.scm
+
+(declare (standard-bindings) (extended-bindings) (not safe) (not run-time-bindings))
+(declare (not standard-bindings append for-each))
+
+(println ">>> app.scm")
+
+(define (fib n) (if (fx< n 2) n (fx+ (fib (fx- n 1)) (fib (fx- n 2)))))
+
+(for-each
+ (lambda (x)
+   (println (fib x)))
+ (append '(1 2 3)
+         '(4 5 6)))
+
+(let* ((start (current-milliseconds))
+       (result (fib 35))
+       (end (current-milliseconds)))
+  (js-alert (fx- end start))
+  (js-alert result))
+```
+
+### Makefile
+
+```
+GSC=../gsc/gsc -:=.. -target js
+GSC=gsc -target js
+
+all: run
+
+
+lib.js: lib.scm
+	$(GSC) -c lib.scm
+
+app.js: app.scm
+	$(GSC) -c app.scm
+
+app_.js: lib.js app.js
+	$(GSC) -link -l lib app.js
+
+linked_app.js: lib.js app.js app_.js
+	$(GSC) -c lib.scm
+	cat app_.js lib.js app.js > linked_app.js
+	wc *.js
+
+run: linked_app.js
+	node linked_app.js
+
+clean:
+	rm -f lib.js app.js app_.js linked_app.js
+
+```
+
+----
+   id: bk0fdvbrrl
