@@ -1,9 +1,7 @@
-# Hello from Gambits Universal (Javascript) Backend
+% Hello from Gambits Universal (Javascript) Backend
+% ben@srctxt.com
+% 2019.11.12
 
-   ben@srctxt.com
-   2019.11.12
-
-```
 
 ## Introduction
 
@@ -22,6 +20,7 @@ https://mailman.iro.umontreal.ca/pipermail/gambit-list/2019-November/009240.html
 
 ### lib.scm
 
+```
 ;; file: lib.scm
 
 ;(declare (standard-bindings) (extended-bindings) (not safe) (not run-time-bindings))

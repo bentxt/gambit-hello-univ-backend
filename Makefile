@@ -23,3 +23,7 @@ run: linked_app.js
 
 clean:
 	rm -f lib.js app.js app_.js linked_app.js
+	rm -f *.html
+
+doc: 
+	pandoc -s Article.txt > Article.html
