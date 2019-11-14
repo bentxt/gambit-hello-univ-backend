@@ -1,0 +1,64 @@
+from : https://github.com/gambit/gambit/issues/419#issuecomment-547400994
+
+The problem is due to the "incorrect" declarations at the top of the files app.scm and lib.scm. The declarations should be:
+
+	(declare (standard-bindings) (extended-bindings) (not safe) (not run-time-bindings))
+	(declare (not standard-bindings append for-each))
+
+The second line is important because the append and for-each global variables don't have the standard bindings provided by the Gambit runtime library. Previously the second declaration was not needed because the compiler did not optimize calls to append and for-each, but now the compiler converts (append ...) to (##append ...) when append has the standard bindings and (not safe) is also declared (in this case, calling ##append avoids the type checks on the parameters). So alternatively you could remove the (not safe) declaration.
+
+-------
+
+Entire thread: 
+
+
+ Open
+Problem with a library function in the Js backend
+#419
+bentxt opened this issue 16 days ago · 3 comments
+Comments
+@bentxt
+   
+bentxt commented 16 days ago • 
+edited 
+Hi,
+I try to run the example for Js backend from
+https://mailman.iro.umontreal.ca/pipermail/gambit-list/2019-July/009103.html
+
+All the code compiles but I get a runtime error from node
+
+   gambit-test/linked_app.js:1066
+     return g_peps["##append"]();
+                             ^
+TypeError: g_peps.##append is not a function
+I guess it has something to do with the name 'append'? That this name cannot be overwritten in a local library?
+
+Regards Ben
+
+PS. Because this problem first occurred in the context of the example on the mailing-list, I initially reported the problem to that list. Sorry for the unnecessary duplication. Here for reference the link to the post: https://mailman.iro.umontreal.ca/pipermail/gambit-list/2019-October/009209.html
+ 👀 1
+ 
+@feeley
+   
+Member
+feeley commented 16 days ago
+Please try defining the procedure app instead of append, and if that works I will look into why it is mapping append to ##append.
+ @bentxt
+   
+Author
+bentxt commented 16 days ago • 
+edited 
+Please try defining the procedure app instead of append
+yes, I can confirm that this change "solves" the problem
+ @feeley
+   
+Member
+feeley commented 16 days ago
+The problem is due to the "incorrect" declarations at the top of the files app.scm and lib.scm. The declarations should be:
+
+(declare (standard-bindings) (extended-bindings) (not safe) (not run-time-bindings))
+(declare (not standard-bindings append for-each))
+The second line is important because the append and for-each global variables don't have the standard bindings provided by the Gambit runtime library. Previously the second declaration was not needed because the compiler did not optimize calls to append and for-each, but now the compiler converts (append ...) to (##append ...) when append has the standard bindings and (not safe) is also declared (in this case, calling ##append avoids the type checks on the parameters). So alternatively you could remove the (not safe) declaration.
+ 🎉 1
+ 
+
